@@ -186,6 +186,9 @@ ITEMS.forEach(it=>{
   it._name = it.p[0].n;
 });
 const bySk = (a,b)=> a.sk<b.sk?-1:a.sk>b.sk?1:0;
+let HIST = true;
+function pushNav(state, hash){ if(!HIST) return; try{ history.pushState(state,'',hash); }catch(e){ HIST = false; } }
+function goBack(){ if(HIST && history.state){ history.back(); } else { closeDetail(); } }
 const BY_ID = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
 
 // ---------- 一覧 ----------
@@ -332,8 +335,8 @@ function openDetail(id, push){
   const dv = document.getElementById('dv'), sh = document.getElementById('sheet');
   sh.innerHTML = detailHTML(it); sh.scrollTop = 0;
   dv.classList.add('open'); document.body.style.overflow='hidden';
-  if(push) history.pushState({d:id}, '', '#'+id);
-  document.getElementById('back').onclick = ()=>history.back();
+  if(push) pushNav({d:id}, '#'+id);
+  document.getElementById('back').onclick = goBack;
   const cp = document.getElementById('cp');
   if(cp) cp.onclick = ()=>copy(copyText(it));
   document.getElementById('fb').onclick = ()=>feedback(it);
@@ -372,8 +375,8 @@ function showAbout(push){
     <p class="foot">採用薬リスト：${esc(DATA.listDate)}出力分／作成：${esc(DATA.built)}<br>対象：内服・外用の全採用薬、注射は自己注射薬のみ。</p>
   </div>`;
   document.getElementById('dv').classList.add('open'); document.body.style.overflow='hidden'; sh.scrollTop=0;
-  if(push) history.pushState({a:1}, '', '#about');
-  document.getElementById('back').onclick = ()=>history.back();
+  if(push) pushNav({a:1}, '#about');
+  document.getElementById('back').onclick = goBack;
 }
 function copy(text, msg){
   const done = ()=>toast(msg||'コピーしました');
@@ -419,17 +422,17 @@ document.getElementById('main').addEventListener('click', e=>{
   const r = e.target.closest('.row'); if(r) openDetail(r.dataset.id, true);
 });
 document.getElementById('infoBtn').onclick = ()=>showAbout(true);
-document.getElementById('dv').addEventListener('click', e=>{ if(e.target.id==='dv') history.back(); });
+document.getElementById('dv').addEventListener('click', e=>{ if(e.target.id==='dv') goBack(); });
 window.addEventListener('popstate', ()=>{
   const h = location.hash.slice(1);
   if(h==='about') showAbout(false); else if(BY_ID[h]) openDetail(h,false); else closeDetail();
 });
 document.addEventListener('keydown', e=>{
-  if(e.key==='Escape' && document.getElementById('dv').classList.contains('open')) history.back();
+  if(e.key==='Escape' && document.getElementById('dv').classList.contains('open')) goBack();
   if(e.key==='/' && document.activeElement!==q){ e.preventDefault(); q.focus(); }
 });
 render();
-if(location.hash){ const h=location.hash.slice(1); if(BY_ID[h]) openDetail(h,false); else if(h==='about') showAbout(false); }
+try{ if(location.hash){ const h=location.hash.slice(1); if(BY_ID[h]) openDetail(h,false); else if(h==='about') showAbout(false); } }catch(e){}
 </script>
 </body>
 </html>
